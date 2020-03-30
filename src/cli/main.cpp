@@ -32,6 +32,7 @@
 #include "InitMacros.hxx"
 #include "../../ruby/init_openstudio.hpp"
 #include <embedded_files.hxx>
+#include <chrono>
 
 #include <iostream>
 
@@ -216,6 +217,8 @@ int main(int argc, char *argv[])
       std::cout << "Unknown Exception in embedded_help" << std::endl; // endl will flush
       return ruby_cleanup(1);
     }
+
+    auto start = std::chrono::high_resolution_clock::now();
 
     //// encodings
     Init_encdb();
@@ -504,6 +507,10 @@ int main(int argc, char *argv[])
     Init_nonblock();
     rb_provide("io/nonblock");
     rb_provide("io/nonblock.so");
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+    std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
    #ifndef _WIN32
 
