@@ -29,7 +29,13 @@
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ########################################################################################################################
 
+puts "openstudio_cli.rb:"
+
+t0 = Time.now
+
 require 'openstudio'
+
+puts "\trequire 'openstudio': #{Time.now - t0} s"
 
 #File.open('E:\test\test.log', 'w') do |f|
 #  ENV.each_key {|k| f.puts "#{k} = #{ENV[k]}" }
@@ -37,10 +43,14 @@ require 'openstudio'
 
 #Signal.trap('INT') { abort }
 
+t0 = Time.now
+
 require 'logger'
 require 'optparse'
 require 'stringio'
 require 'rbconfig'
+
+puts "\trequire 'logger', 'optparse', 'stringio', 'rbconfig': #{Time.now - t0} s"
 
 #include OpenStudio::Workflow::Util::IO
 
@@ -64,10 +74,18 @@ if RbConfig::CONFIG['arch'] =~ /x64-mswin64/
   RbConfig::CONFIG['arch'] = 'x64-mingw32'
 end
 
+t0 = Time.now
+
 # load embedded ruby gems
 require 'rubygems'
 require 'rubygems/version'
+
+puts "\trequire 'rubygems', 'rubygems/version': #{Time.now - t0} s"
+t0 = Time.now
+
 Gem::Platform.local
+
+puts "\trequire Gem::Platform.local: #{Time.now - t0} s"
 
 if original_arch
   RbConfig::CONFIG['arch'] = original_arch
@@ -282,6 +300,8 @@ end
 # parse the main args, those that come before the sub command
 def parse_main_args(main_args)
 
+puts "\tparse_main_args:"
+t0 = Time.now
   $logger.debug "Parsing main_args #{main_args}"
 
   # verbose already handled
@@ -311,7 +331,8 @@ def parse_main_args(main_args)
       $logger.warn "'--no-ssl' flag is deprecated"
     end
   end
-
+puts "\t\tmain_args loop 1: #{Time.now - t0} s"
+t0 = Time.now
   remove_indices.reverse_each {|i| main_args.delete_at(i)}
 
   if !new_path.empty?
@@ -348,7 +369,8 @@ def parse_main_args(main_args)
     end
   end
   remove_indices.reverse_each {|i| main_args.delete_at(i)}
-
+puts "\t\tmain_args loop 2: #{Time.now - t0} s"
+t0 = Time.now
   if !new_path.empty?
     if ENV['GEM_PATH']
       new_path << ENV['GEM_PATH'].to_s
@@ -443,15 +465,17 @@ def parse_main_args(main_args)
     #ENV['BUNDLE_IGNORE_CONFIG'] = 'true'
 
   end
-
+puts "\t\tmain_args includes: #{Time.now - t0} s"
+t0 = Time.now
   Gem.paths.path << ':/ruby/2.5.0/gems/'
   Gem.paths.path << ':/ruby/2.5.0/bundler/gems/'
   Gem::Deprecate.skip = true
-
+puts "\t\tGem.paths.path: #{Time.now - t0} s"
   # find all the embedded gems
   original_embedded_gems = {}
   begin
     EmbeddedScripting::allFileNamesAsString().split(';').each do |f|
+# t00 = Time.now
       if md = /specifications\/.*\.gemspec$/.match(f) ||
          md = /bundler\/.*\.gemspec$/.match(f)
         begin
@@ -479,11 +503,13 @@ def parse_main_args(main_args)
           safe_puts e.message
         end
       end
+# puts "\t\t\t#{f}: #{Time.now - t00} s"
     end
   rescue NameError => e
     # EmbeddedScripting not available
   end
-
+puts "\t\toriginal_embedded_gems: #{Time.now - t0} s"
+t0 = Time.now
   # activate or remove bundler
   Gem::Specification.each do |spec|
     if spec.gem_dir.chars.first == ':'
@@ -497,7 +523,8 @@ def parse_main_args(main_args)
       end
     end
   end
-
+puts "\t\tGem::Specification: #{Time.now - t0} s"
+t0 = Time.now
   if use_bundler
 
     current_dir = Dir.pwd
@@ -643,7 +670,8 @@ def parse_main_args(main_args)
     end
 
   end # use_bundler
-
+puts "\t\tif use_bundler: #{Time.now - t0} s"
+t0 = Time.now
   # Handle -e commands
   remove_indices = []
   $eval_cmds = []
@@ -670,7 +698,7 @@ def parse_main_args(main_args)
     $logger.error "Unknown arguments #{main_args} found"
     return false
   end
-
+puts "\t\trest of parse_main_args: #{Time.now - t0} s"
   return true
 end
 
@@ -702,7 +730,9 @@ class CLI
   # @return [Object] An instance of the CLI class with initialized globals
   #
   def initialize(argv)
+t0 = Time.now
     $main_args, $sub_command, $sub_args = split_main_and_subcommand(argv, command_list)
+puts "\tsplit_main_and_subcommand: #{Time.now - t0} s"
 
     if $main_args.include? '--verbose'
       $logger.level = Logger::DEBUG
@@ -724,10 +754,14 @@ class CLI
       return 0
     end
 
+t0 = Time.now
+
     if !parse_main_args($main_args)
       help
       return 1
     end
+
+puts "\tparse_main_args: #{Time.now - t0} s"
 
     # -e commands detected
     if !$eval_cmds.empty?

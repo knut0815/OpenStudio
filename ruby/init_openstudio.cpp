@@ -30,7 +30,8 @@
 #include "init_openstudio.hpp"
 #include <ruby.h>
 #include <stdexcept>
-
+#include <chrono>
+#include <iostream>
 
 extern "C" {
   void Init_openstudioairflow(void);
@@ -71,6 +72,9 @@ extern "C" {
 }
 
 void init_openstudio_internal() {
+
+  auto start0 = std::chrono::high_resolution_clock::now();
+
   rb_provide("openstudio");
   rb_provide("openstudio.so");
 
@@ -173,6 +177,10 @@ void init_openstudio_internal() {
   Init_openstudiosdd();
   rb_provide("openstudiosdd");
   rb_provide("openstudiosdd.so");
+
+  auto finish0 = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed0 = finish0 - start0;
+  std::cout << "init_openstudio_internal inits: " << elapsed0.count() << " s\n";
 
   //Init_openstudiomodeleditor(); # happens separately in openstudio.so only, for SketchUp plug-in
   //rb_provide("openstudiomodeleditor");
@@ -349,7 +357,13 @@ end # module OpenStudio
 
 )END";
 
+  auto start1 = std::chrono::high_resolution_clock::now();
+
   evalString(ruby_typedef_script);
+
+  auto finish1 = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed1 = finish1 - start1;
+  std::cout << "ruby_typedef_script: " << elapsed1.count() << " s\n";
 
 }
 

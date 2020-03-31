@@ -169,6 +169,9 @@ int main(int argc, char *argv[])
 {
   ruby_sysinit(&argc, &argv);
   {
+
+    auto start0 = std::chrono::high_resolution_clock::now();
+   
     RUBY_INIT_STACK;
     ruby_init();
 
@@ -217,6 +220,10 @@ int main(int argc, char *argv[])
       std::cout << "Unknown Exception in embedded_help" << std::endl; // endl will flush
       return ruby_cleanup(1);
     }
+
+    auto finish0 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed0 = finish0 - start0;
+    std::cout << "ruby_sysinit: " << elapsed0.count() << " s\n";
 
     auto start1 = std::chrono::high_resolution_clock::now();
 
@@ -510,7 +517,9 @@ int main(int argc, char *argv[])
 
     auto finish1 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed1 = finish1 - start1;
-    std::cout << "1st block time: " << elapsed1.count() << " s\n";
+    std::cout << "Init and rb_provide 1: " << elapsed1.count() << " s\n";
+
+    auto start2 = std::chrono::high_resolution_clock::now();
 
    #ifndef _WIN32
 
@@ -540,8 +549,18 @@ int main(int argc, char *argv[])
      rb_provide("syslog.so");
     #endif
 
+    auto finish2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = finish2 - start2;
+    std::cout << "Init and rb_provide 2: " << elapsed2.count() << " s\n";
+
+    auto start3 = std::chrono::high_resolution_clock::now();
+
     // openstudio
     init_openstudio_internal();
+
+    auto finish3 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed3 = finish3 - start3;
+    std::cout << "init_openstudio_internal: " << elapsed3.count() << " s\n";
   }
 
   // DLM: this will interpret any strings passed on the command line as UTF-8
@@ -566,7 +585,7 @@ int main(int argc, char *argv[])
     )");
     auto finish2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed2 = finish2 - start2;
-    std::cout << "2nd block time: " << elapsed2.count() << " s\n";
+    std::cout << "require openstudio_cli: " << elapsed2.count() << " s\n";
   } catch (const std::exception& e){
     rubyInterpreter.evalString(R"(STDOUT.flush)");
     std::cout << "Exception: " << e.what() << std::endl; // endl will flush
@@ -576,8 +595,16 @@ int main(int argc, char *argv[])
     std::cout << "Unknown Exception" << std::endl; // endl will flush
     return ruby_cleanup(1);
   }
+
+  auto start4 = std::chrono::high_resolution_clock::now();
+
   rubyInterpreter.evalString(R"(STDOUT.flush)");
   std::cout << std::flush;
+
+  auto finish4 = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed4 = finish4 - start4;
+  std::cout << "after require openstudio_cli: " << elapsed4.count() << " s\n";
+
   return ruby_cleanup(0);
 }
 
