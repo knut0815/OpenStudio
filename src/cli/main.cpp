@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
       return ruby_cleanup(1);
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start1 = std::chrono::high_resolution_clock::now();
 
     //// encodings
     Init_encdb();
@@ -508,9 +508,9 @@ int main(int argc, char *argv[])
     rb_provide("io/nonblock");
     rb_provide("io/nonblock.so");
 
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    std::cout << "Elapsed time: " << elapsed.count() << " s\n";
+    auto finish1 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed1 = finish1 - start1;
+    std::cout << "1st block time: " << elapsed1.count() << " s\n";
 
    #ifndef _WIN32
 
@@ -553,6 +553,7 @@ int main(int argc, char *argv[])
   ruby_set_argv(argc - 1,argv + 1);
 
   try{
+    auto start2 = std::chrono::high_resolution_clock::now();
     rubyInterpreter.evalString(R"(
        begin
          (require 'openstudio_cli')
@@ -562,7 +563,10 @@ int main(int argc, char *argv[])
          puts "Backtrace:\n\t" + e.backtrace.join("\n\t")
          raise
        end
-     )");
+    )");
+    auto finish2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = finish2 - start2;
+    std::cout << "2nd block time: " << elapsed2.count() << " s\n";
   } catch (const std::exception& e){
     rubyInterpreter.evalString(R"(STDOUT.flush)");
     std::cout << "Exception: " << e.what() << std::endl; // endl will flush
